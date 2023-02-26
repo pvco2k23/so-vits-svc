@@ -89,7 +89,7 @@ def resize2d_f0(x, target_len):
     res = np.nan_to_num(target)
     return res
 
-def get_f0_old(x, p_len,f0_up_key=0):
+def get_f0_old(x, p_len,voice_thresh,f0_up_key=0):
 
     time_step = 160 / 16000 * 1000
     f0_min = 50
@@ -98,7 +98,7 @@ def get_f0_old(x, p_len,f0_up_key=0):
     f0_mel_max = 1127 * np.log(1 + f0_max / 700)
 
     f0 = parselmouth.Sound(x, 16000).to_pitch_ac(
-        time_step=time_step / 1000, voicing_threshold=0.6,
+        time_step=time_step / 1000, voicing_threshold=voice_thresh,
         pitch_floor=f0_min, pitch_ceiling=f0_max).selected_array['frequency']
     if len(f0) > p_len:
         f0 = f0[:p_len]
@@ -114,7 +114,7 @@ def get_f0_old(x, p_len,f0_up_key=0):
     f0_coarse = np.rint(f0_mel).astype(np.int)
     return f0_coarse, f0
 
-def get_f0_new(x, p_len,f0_up_key=0):
+def get_f0_new(x, p_len,voice_thresh,f0_up_key=0):
 
     time_step = 160 / 16000 * 1000
     f0_min = 75
@@ -123,7 +123,7 @@ def get_f0_new(x, p_len,f0_up_key=0):
     f0_mel_max = 1127 * np.log(1 + f0_max / 700)
 
     f0 = parselmouth.Sound(x, 16000).to_pitch_cc(
-        time_step=time_step / 1000, voicing_threshold=0.3,
+        time_step=time_step / 1000, voicing_threshold=voice_thresh,
         pitch_floor=f0_min, pitch_ceiling=f0_max).selected_array['frequency']
     if len(f0) > p_len:
         f0 = f0[:p_len]
@@ -182,6 +182,7 @@ class Svc(object):
         self.hop_size = self.hps_ms.data.hop_length
         self.speakers = {}
         self.use_old_f0 = False
+        self.voice_threshold = 0.3
         for spk, sid in self.hps_ms.spk.items():
             self.speakers[sid] = spk
         self.spk2id = self.hps_ms.spk
@@ -232,10 +233,10 @@ class Svc(object):
         soft = self.get_units(source, sr).squeeze(0).cpu().numpy()
         if self.use_old_f0:
             f0_coarse, f0 = get_f0_old(source.cpu().numpy()[0],
-                soft.shape[0]*2, tran)
+                soft.shape[0]*2, self.voice_threshold, tran)
         else:
             f0_coarse, f0 = get_f0_new(source.cpu().numpy()[0],
-                soft.shape[0]*2, tran)
+                soft.shape[0]*2, self.voice_threshold, tran)
         return soft, f0
 
     def infer(self, speaker_id, tran, raw_path):

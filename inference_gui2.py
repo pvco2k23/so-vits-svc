@@ -71,6 +71,7 @@ TALKNET_ADDR = "127.0.0.1:8050"
 MODELS_DIR = "models"
 RECORD_DIR = "./recordings"
 JSON_NAME = "inference_gui2_persist.json"
+RECENT_DIR_MAXLEN = 10
     
 def get_speakers():
     speakers = []
@@ -454,7 +455,7 @@ class InferenceGui2 (QMainWindow):
         self.speaker = {}
         self.output_dir = os.path.abspath("./results/")
         self.cached_file_dir = os.path.abspath(".")
-        self.recent_dirs = deque(maxlen=10)
+        self.recent_dirs = deque(maxlen=RECENT_DIR_MAXLEN)
 
         self.svc_model = []
 
@@ -474,7 +475,7 @@ class InferenceGui2 (QMainWindow):
 
         # Cull non-existent paths from recent_dirs
         self.recent_dirs = deque(
-            [d for d in self.recent_dirs if os.path.exists(d)])
+            [d for d in self.recent_dirs if os.path.exists(d)], maxlen=RECENT_DIR_MAXLEN)
         
         self.speaker_box = QComboBox()
         for spk in self.speakers:
@@ -525,6 +526,14 @@ class InferenceGui2 (QMainWindow):
         self.sovits_lay.addWidget(self.f0_switch)
         self.f0_switch.stateChanged.connect(self.update_f0_switch)
 
+        self.thresh_label = QLabel("Voicing threshold")
+        self.sovits_lay.addWidget(self.thresh_label)
+        self.voice_validator = QDoubleValidator(0.1,0.9,1)
+        self.voice_threshold = QLineEdit('0.3')
+        self.voice_threshold.setValidator(self.voice_validator)
+        self.voice_threshold.textChanged.connect(self.update_voice_thresh)
+        self.sovits_lay.addWidget(self.voice_threshold)
+
         if RUBBERBAND_AVAILABLE:
             self.ts_label = QLabel("Timestretch (0.5, 1.0)")
             self.ts_num = QLineEdit('1.0')
@@ -558,7 +567,17 @@ class InferenceGui2 (QMainWindow):
         self.update_recent_combo()
         
     def update_f0_switch(self):
-        self.svc_model.use_old_f0 = self.f0_switch.isChecked()
+        if self.f0_switch.isChecked():
+            self.svc_model.use_old_f0 = True
+            self.voice_threshold.setText('0.6')
+            self.svc_model.voice_threshold = 0.6
+        else:
+            self.svc_model.use_old_f0 = False
+            self.voice_threshold.setText('0.3')
+            self.svc_model.voice_threshold = 0.3
+
+    def update_voice_thresh(self):
+        self.svc_model.voice_threshold = float(self.voice_threshold.text())
 
     def update_files(self, files):
         if (files is None) or (len(files) == 0):
@@ -567,7 +586,8 @@ class InferenceGui2 (QMainWindow):
         self.update_file_label()
         dir_path = os.path.abspath(os.path.dirname(self.clean_files[0]))
         if not dir_path in self.recent_dirs:
-            self.recent_dirs.append(dir_path)
+            self.recent_dirs.appendleft(dir_path)
+        self.recent_combo.setCurrentIndex(self.recent_dirs.index(dir_path))
         self.update_input_preview()
         self.update_recent_combo()
 
@@ -768,7 +788,8 @@ class InferenceGui2 (QMainWindow):
         self.talknet_file_label.setText("File: "+str(self.talknet_file))
         dir_path = os.path.abspath(os.path.dirname(self.talknet_file))
         if not dir_path in self.recent_dirs:
-            self.recent_dirs.append(dir_path)
+            self.recent_dirs.appendleft(dir_path)
+        self.recent_combo.setCurrentIndex(self.recent_dirs.index(dir_path))
         self.update_recent_combo()
 
     def file_dialog(self):
@@ -826,7 +847,7 @@ class InferenceGui2 (QMainWindow):
             return
         with open(JSON_NAME, "r") as f:
             o = json.load(f)
-            self.recent_dirs = deque(o.get("recent_dirs",[]))
+            self.recent_dirs = deque(o.get("recent_dirs",[]), maxlen=RECENT_DIR_MAXLEN)
             self.output_dir = o.get("output_dir",os.path.abspath("./results/"))
             self.talknet_addr = o.get("talknet_addr",TALKNET_ADDR)
 
