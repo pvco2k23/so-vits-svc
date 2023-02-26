@@ -1,6 +1,4 @@
 # SoftVC VITS Singing Voice Conversion
-## Model Overview
-A singing voice coversion (SVC) model, using the SoftVC encoder to extract features from the input audio, sent into VITS along with the F0 to replace the original input to acheive a voice conversion effect. Additionally, changing the vocoder to [NSF HiFiGAN](https://github.com/openvpi/DiffSinger/tree/refactor/modules/nsf_hifigan) to fix the issue with unwanted staccato.
 
 ## Notice
 * This fork has some modifications to make it work better on Windows and with smaller multi-speaker datasets.
