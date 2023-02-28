@@ -10,7 +10,11 @@
 + The current branch is the 32kHz version, which requires less vram during inferencing, as well as faster inferencing speeds, and datasets for said branch take up less disk space. Thus the 32 kHz branch is recommended for use.
 + If you want to train 48 kHz variant models, switch to the [main branch](https://github.com/innnky/so-vits-svc/tree/main). NOTE: effusiveperiscope does not maintain a 48khz branch.
 ## Colab notebook scripts
-Note that these are not maintained by me.
+
+[Colab training notebook (EN)](https://colab.research.google.com/drive/1ABKgdAWp2UGfgavyxI_Nv7ytdL5h6J6f?usp=sharing)
+
+Note that the following notebooks are not maintained by me.
+
 [Colab training notebook (CN)](https://colab.research.google.com/drive/1rCUOOVG7-XQlVZuWRAj5IpGrMM8t07pE?usp=sharing)
 
 [Colab inference notebook](https://colab.research.google.com/drive/1igkFWDfNRsOLCLcZ-WXyBmOCSWlJIku0?usp=sharing)
