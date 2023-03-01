@@ -484,7 +484,10 @@ class InferenceGui2 (QMainWindow):
         self.sovits_lay.addWidget(self.speaker_label)
         self.sovits_lay.addWidget(self.speaker_box)
         self.speaker_box.currentIndexChanged.connect(self.try_load_speaker)
-        self.try_load_speaker(0)
+        if len(self.speakers):
+            self.try_load_speaker(0)
+        else:
+            print("No speakers found!")
 
         self.file_button = FileButton()
         self.sovits_lay.addWidget(self.file_button)
