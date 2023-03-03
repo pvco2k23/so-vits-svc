@@ -800,8 +800,7 @@ class InferenceGui2 (QMainWindow):
             self.speakers[index]["cfg_path"])
 
     def talknet_file_dialog(self):
-        self.talknet_update_file(
-            QFileDialog.getOpenFileName(self, "File to process")[0])
+        self.talknet_update_file(QFileDialog.getOpenFileName(self, "File to process"))
 
     def talknet_update_preview(self):
         self.talknet_input_preview.from_file(self.talknet_file)
