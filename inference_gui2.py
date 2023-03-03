@@ -207,14 +207,17 @@ class AudioPreviewWidget(QWidget):
             self.playing_label.hide()
 
     def from_file(self, path):
-        self.player.stop()
-        if hasattr(self, 'audio_buffer'):
-            self.audio_buffer.close()
+        try:
+            self.player.stop()
+            if hasattr(self, 'audio_buffer'):
+                self.audio_buffer.close()
 
-        self.player.setMedia(QMediaContent(QUrl.fromLocalFile(path)))
+            self.player.setMedia(QMediaContent(QUrl.fromLocalFile(path)))
 
-        self.play_button.setIcon(self.style().standardIcon(
-            getattr(QStyle, 'SP_MediaPlay')))
+            self.play_button.setIcon(self.style().standardIcon(
+                getattr(QStyle, 'SP_MediaPlay')))
+        except Exception as e:
+            pass
 
     def from_memory(self, data):
         self.player.stop()
@@ -698,6 +701,10 @@ class InferenceGui2 (QMainWindow):
         self.talknet_sovits = QCheckBox("Auto push TalkNet output to so-vits-svc")
         self.talknet_lay.addWidget(self.talknet_sovits)
 
+        self.talknet_sovits_param = QCheckBox(
+            "Apply left-side parameters to so-vits-svc gens")
+        self.talknet_lay.addWidget(self.talknet_sovits_param)
+
         self.talknet_gen_button = QPushButton("Generate")
         self.talknet_lay.addWidget(self.talknet_gen_button)
         self.talknet_gen_button.clicked.connect(self.talknet_generate_request)
@@ -755,11 +762,11 @@ class InferenceGui2 (QMainWindow):
             return
         res = json.loads(response.text)
         if self.talknet_sovits.isChecked():
-            # Only one file should be outputted here
-            sovits_res_path = self.convert([res["output_path"]], dry_trans=0,
-                source_trans=0)[0]
-            # Assume no transposition is desired since that is handled
-            # in TalkNet
+            if self.talknet_sovits_param.isChecked():
+                sovits_res_path = self.convert([res["output_path"]])[0]
+            else:
+                sovits_res_path = self.convert([res["output_path"]],
+                    dry_trans=0, source_trans=0)[0]
         self.talknet_output_preview.from_file(res.get("output_path"))
         self.talknet_output_preview.set_text("Preview - "+res.get(
             "output_path","N/A"))
