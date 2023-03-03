@@ -17,7 +17,7 @@ Note that the following notebooks are not maintained by me.
 
 [Colab training notebook (CN)](https://colab.research.google.com/drive/1rCUOOVG7-XQlVZuWRAj5IpGrMM8t07pE?usp=sharing)
 
-[Colab inference notebook](https://colab.research.google.com/drive/1igkFWDfNRsOLCLcZ-WXyBmOCSWlJIku0?usp=sharing)
+[Colab inference notebook](https://colab.research.google.com/drive/1BaU09Xkhe6MEHxCC9URDYZ2ERajfJ_Fa#scrollTo=oFr2MWaQfR6X)
 
 # Inference
 Instructions for CLI inference can be found in the original repository or [here](https://docs.google.com/document/d/1y1pfS0LCrwbbvxdn3ZksH25BKaf0LaO13uYppxIQnac/edit#heading=h.ce7da4l3o6jf). Note that CLI inference is very clunky and generally not recommended for production. Instructions for inference using various GUIs are available below.
