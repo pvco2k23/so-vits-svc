@@ -855,7 +855,7 @@ class InferenceGui2 (QMainWindow):
     def output_dialog(self):
         temp_output_dir = QFileDialog.getExistingDirectory(self,
             "Output Directory", self.output_dir, QFileDialog.ShowDirsOnly)
-        if not os.path.exists(output_dir):
+        if not os.path.exists(temp_output_dir):
             return
         self.output_dir = temp_output_dir
         self.output_label.setText("Output Directory: "+str(self.output_dir))
