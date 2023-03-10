@@ -28,7 +28,7 @@ An anon has provided docker files with instructions [here.](https://files.catbox
 ## Required downloads
 + Download softVC hubert model:[hubert-soft-0d54a1f4.pt](https://github.com/bshall/hubert/releases/download/v0.1/hubert-soft-0d54a1f4.pt)
   + Place under `hubert`.
-+ Download pretrained models [G_0.pth](https://huggingface.co/innnky/sovits_pretrained/resolve/main/G_0.pth) and [D_0.pth](https://huggingface.co/innnky/sovits_pretrained/resolve/main/D_0.pth)
++ Download pretrained models [G_0.pth](https://huggingface.co/datasets/HazySkies/SV3/resolve/main/G_0.pth) and [D_0.pth](https://huggingface.co/datasets/HazySkies/SV3/resolve/main/D_0.pth)
   + Place under `logs/32k`.
   + Pretrained models are required, because from experiments, training from scratch can be rather unpredictable to say the least, and training with a pretrained model can greatly improve training speeds.
   + The pretrained model includes云灏, 即霜, 辉宇·星AI, 派蒙, and 绫地宁宁, covering the common ranges of both male and female voices, and so it can be seen as a rather universal pretrained model.
@@ -40,8 +40,8 @@ The following shell commands can be used for downloading with bash.
 # hubert
 wget -P hubert/ https://github.com/bshall/hubert/releases/download/v0.1/hubert-soft-0d54a1f4.pt
 # G&D pretrained models
-wget -P logs/32k/ https://huggingface.co/innnky/sovits_pretrained/resolve/main/G_0.pth
-wget -P logs/32k/ https://huggingface.co/innnky/sovits_pretrained/resolve/main/D_0.pth
+wget -P logs/32k/ https://huggingface.co/datasets/HazySkies/SV3/resolve/main/G_0.pth
+wget -P logs/32k/ https://huggingface.co/datasets/HazySkies/SV3/resolve/main/D_0.pth
 
 ```
 
