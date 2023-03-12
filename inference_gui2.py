@@ -274,7 +274,11 @@ class AudioRecorder(QGroupBox):
                 self.input_dev_box.addItem(inp)
         self.layout.addWidget(self.input_dev_box)
         self.input_dev_box.currentIndexChanged.connect(self.set_input_dev)
-        self.set_input_dev(0) # Always use the first listed output
+        if len(self.recorder.audioInputs()) == 0:
+            self.record_button.setEnabled(False)
+            print("No audio inputs found")
+        else:
+            self.set_input_dev(0) # Always use the first listed output
         # Doing otherwise on Windows would require platform-specific code
 
         self.record_button = QPushButton("Record")
