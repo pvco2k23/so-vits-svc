@@ -14,7 +14,7 @@ def process(item):
     wav_path = os.path.join(args.in_dir, speaker, wav_name)
     if os.path.exists(wav_path) and '.wav' in wav_path:
         os.makedirs(os.path.join(args.out_dir, speaker), exist_ok=True)
-        wav, sr = librosa.load(wav_path, None)
+        wav, sr = librosa.load(wav_path, sr=None)
         wav, _ = librosa.effects.trim(wav, top_db=20)
         peak = np.abs(wav).max()
         if peak > 1.0:
@@ -24,7 +24,7 @@ def process(item):
         save_path2 = os.path.join(args.out_dir, speaker, save_name)
         wavfile.write(
             save_path2,
-            args.sr2,
+            args.sr,
             (wav2 * np.iinfo(np.int16).max).astype(np.int16)
         )
 
