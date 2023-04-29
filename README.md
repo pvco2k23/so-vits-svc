@@ -1,4 +1,11 @@
 # Singing Voice Conversion
+[![Open in Colab](https://colab.research.google.com/assets/colab-badge.svg)](https://colab.research.google.com/drive/1PY1E4bDAeHbAD4r99D_oYXB46fG8nIA5?usp=sharing)
+<img alt="GitHub Repo stars" src="https://img.shields.io/github/stars/PlayVoice/so-vits-svc-5.0">
+<img alt="GitHub forks" src="https://img.shields.io/github/forks/PlayVoice/so-vits-svc-5.0">
+<img alt="GitHub issues" src="https://img.shields.io/github/issues/PlayVoice/so-vits-svc-5.0">
+<img alt="GitHub" src="https://img.shields.io/github/license/PlayVoice/so-vits-svc-5.0">
+
+【无需去伴奏】就能直接进行歌声转换的SVC库
 
 ## 技术分支
 
@@ -8,7 +15,7 @@
 
 - [PlayVoice/max-vc](https://github.com/PlayVoice/max-vc) 不提取F0，解决F0提取不准，丝滑的转换结果
 
-## 本项目更新中，暂时不能使用，更新点
+## 本项目更新中，测试模型发布，非最后结果
 
 - 内容提取器更新为OpenAI的whisper
   
@@ -29,7 +36,7 @@
 | nature speech | ✅ |
 | nsf vocoder | ✅ |
 | speaker encoder | ✅ |
-| GRL for speaker | Coming soon! |
+| GRL for speaker | 用法和判别器类似，模型训练完了再处理 |
 | one shot vits | ✅ |
 | band extention | ✅ |
 
@@ -59,52 +66,82 @@ dataset_raw
     └───xxx7-xxx007.wav
 ```
 
-### 工作目录
-    export PYTHONPATH=$PWD
+## 安装依赖
+
+    待完善~~~
 
 ## 数据预处理
-- 1， 重采样
-    > python svc_resample.py
+- 1， 设置工作目录
 
-- 2， 提取音高
-    > python prepare/preprocess_f0.py -w data_svc/waves/ -p data_svc/pitch
+    > export PYTHONPATH=$PWD
 
-- 3， 提取内容编码
-    > python prepare/preprocess_ppg.py -w data_svc/waves/ -p data_svc/whisper
+- 2， 重采样
 
-- 4， 提取音色编码
-    > python prepare/preprocess_speaker.py data_svc/waves/ data_svc/speaker
+    生成采样率16000Hz音频, 存储路径为：./data_svc/waves-16k
 
-- 5， 提取线性谱
-    > python prepare/preprocess_spec.py -w data_svc/waves/ -s data_svc/specs
+    > python prepare/preprocess_a.py -w ./data_raw -o ./data_svc/waves-16k -s 16000
 
-- 6， 生成训练索引
+    生成采样率48000Hz音频, 存储路径为：./data_svc/waves-48k
+
+    > python prepare/preprocess_a.py -w ./data_raw -o ./data_svc/waves-48k -s 48000
+
+    可选的16000Hz提升到48000Hz，待完善~批处理
+
+    > python bandex/inference.py -w svc_out.wav
+
+- 3， 使用16K音频，提取音高
+    > python prepare/preprocess_f0.py -w data_svc/waves-16k/ -p data_svc/pitch
+
+- 4， 使用16k音频，提取内容编码
+    > python prepare/preprocess_ppg.py -w data_svc/waves-16k/ -p data_svc/whisper
+
+- 5， 使用16k音频，提取音色编码
+    > python prepare/preprocess_speaker.py data_svc/waves-16k/ data_svc/speaker
+
+- 6， 使用48k音频，提取线性谱
+    > python prepare/preprocess_spec.py -w data_svc/waves-48k/ -s data_svc/specs
+
+- 7， 使用48k音频，生成训练索引
     > python prepare/preprocess_train.py
 
-- 7， 训练文件调试
+- 8， 训练文件调试
     > python prepare/preprocess_zzz.py
 
 
 ## 训练
 
+启动训练
+
 > python svc_trainer.py -c configs/base.yaml -n sovits5.0
 
+查看日志
+
+> tensorboard --logdir logs/
+
+![snac](https://user-images.githubusercontent.com/16432329/234463836-ddf6d806-ccd1-452c-9961-1467ce26f304.png)
 
 ## 推理
 
-### 当前发布的版本用于代码调试，不是最终效果；模型可以使用configs\singers目录中的56个发音人进行推理；
+### 可以下载release页面的sovits5.0_48k_debug.pth模型，进行推理测试
+### 模型包含56个发音人，在configs/singers目录中，可用于测试音色泄露
+### 4个辨识度较高的发音人样本，在configs/singers_sample目录中
 
 - 1， 设置工作目录
+
     > export PYTHONPATH=$PWD
 
 - 2， 导出推理模型：文本编码器，Flow网络，Decoder网络；判别器和后验编码器只在训练中使用
+
     > python svc_export.py --config configs/base.yaml --checkpoint_path chkpt/sovits5.0/***.pt
 
 - 3， 使用whisper提取内容编码，没有采用一键推理，为了降低显存占用
+
     > python whisper/inference.py -w test.wav -p test.ppg.npy
 
     生成test.ppg.npy；如果下一步没有指定ppg文件，则调用程序自动生成
+
 - 4，指定参数，推理
+
     > python svc_inference.py --config configs/base.yaml --model sovits5.0.pth --spk ./configs/singers/singer0001.npy --wave test.wav --ppg test.ppg.npy
 
     当指定--ppg后，多次推理同一个音频时，可以避免重复提取音频内容编码；没有指定，也会自动提取；
@@ -119,12 +156,8 @@ dataset_raw
     |--wave     | 音频文件 |
     |--ppg      | 音频内容 |
 
-- 5 频率扩展48KHz
-    > python bandex/inference.py -w svc_out.wav
-
-    在当前目录生成svc_out_48k.wav
-
 ## 数据集
+
 | Name | URL |
 | --- | --- |
 |KiSing         |http://shijt.site/index.php/2021/05/16/kising-the-first-open-source-mandarin-singing-voice-synthesis-corpus/|

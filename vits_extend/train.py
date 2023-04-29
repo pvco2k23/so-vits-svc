@@ -57,9 +57,9 @@ def train(rank, args, chkpt_path, hp, hp_str):
                         device=device)
     # define logger, writer, valloader, stft at rank_zero
     if rank == 0:
-        pt_dir = os.path.join(hp.log.chkpt_dir, args.name)
+        pth_dir = os.path.join(hp.log.pth_dir, args.name)
         log_dir = os.path.join(hp.log.log_dir, args.name)
-        os.makedirs(pt_dir, exist_ok=True)
+        os.makedirs(pth_dir, exist_ok=True)
         os.makedirs(log_dir, exist_ok=True)
 
         logging.basicConfig(
@@ -96,11 +96,6 @@ def train(rank, args, chkpt_path, hp, hp_str):
         model_g = DistributedDataParallel(model_g, device_ids=[rank]).to(device)
         model_d = DistributedDataParallel(model_d, device_ids=[rank]).to(device)
 
-    scheduler_g = torch.optim.lr_scheduler.ExponentialLR(
-        optim_g, gamma=hp.train.lr_decay, last_epoch=init_epoch-2)
-    scheduler_d = torch.optim.lr_scheduler.ExponentialLR(
-        optim_d, gamma=hp.train.lr_decay, last_epoch=init_epoch-2)
-
     # this accelerates training when the size of minibatch is always consistent.
     # if not consistent, it'll horribly slow down.
     torch.backends.cudnn.benchmark = True
@@ -117,7 +112,7 @@ def train(rank, args, chkpt_path, hp, hp_str):
 
         trainloader.batch_sampler.set_epoch(epoch)
 
-        if rank == 0 and epoch % hp.log.validation_interval == 0:
+        if rank == 0 and epoch % hp.log.eval_interval == 0:
             with torch.no_grad():
                 validate(hp, args, model_g, model_d, valloader, stft, writer, step, device)
 
@@ -141,7 +136,7 @@ def train(rank, args, chkpt_path, hp, hp_str):
             optim_g.zero_grad()
 
             fake_audio, ids_slice, z_mask, \
-                (z_f, z_r, z_p, m_p, logs_p, z_q, m_q, logs_q) = model_g(
+                (z_f, z_r, z_p, m_p, logs_p, z_q, m_q, logs_q, logdet_f, logdet_r) = model_g(
                     ppg, pit, spec, spk, ppg_l, spec_l)
 
 
@@ -168,13 +163,13 @@ def train(rank, args, chkpt_path, hp, hp_str):
             score_loss = score_loss / len(res_fake + period_fake)
 
             # Kl Loss
-            loss_kl_f = kl_loss(z_f, logs_q, m_p, logs_p, z_mask) * hp.train.c_kl
-            loss_kl_r = kl_loss(z_r, logs_p, m_q, logs_q, z_mask) * hp.train.c_kl
+            loss_kl_f = kl_loss(z_f, logs_q, m_p, logs_p, logdet_f, z_mask) * hp.train.c_kl
+            loss_kl_r = kl_loss(z_r, logs_p, m_q, logs_q, logdet_r, z_mask) * hp.train.c_kl
 
             # for fast train
-            loss_g = score_loss + stft_loss + mel_loss + loss_kl_f + loss_kl_r
+            loss_g = score_loss + mel_loss + stft_loss + loss_kl_f
             # for last train
-            # loss_g = score_loss + stft_loss
+            # loss_g = score_loss + stft_loss + loss_kl_f + loss_kl_r
 
             loss_g.backward()
             optim_g.step()
@@ -203,7 +198,7 @@ def train(rank, args, chkpt_path, hp, hp_str):
             loss_k = loss_kl_f.item()
             loss_r = loss_kl_r.item()
 
-            if rank == 0 and step % hp.log.summary_interval == 0:
+            if rank == 0 and step % hp.log.info_interval == 0:
                 writer.log_training(
                     loss_g, loss_d, loss_m, loss_s, loss_k, loss_r, score_loss.item(), step)
                 # loader.set_description("g %.04f m %.04f s %.04f d %.04f | step %d" % (loss_g, loss_m, loss_s, loss_d, step))
@@ -211,7 +206,7 @@ def train(rank, args, chkpt_path, hp, hp_str):
                     loss_g, loss_m, loss_s, loss_d, loss_k, loss_r, step))
 
         if rank == 0 and epoch % hp.log.save_interval == 0:
-            save_path = os.path.join(pt_dir, '%s_%04d.pt'
+            save_path = os.path.join(pth_dir, '%s_%04d.pt'
                                      % (args.name, epoch))
             torch.save({
                 'model_g': (model_g.module if args.num_gpus > 1 else model_g).state_dict(),
@@ -223,6 +218,3 @@ def train(rank, args, chkpt_path, hp, hp_str):
                 'hp_str': hp_str,
             }, save_path)
             logger.info("Saved checkpoint to: %s" % save_path)
-
-        scheduler_g.step()
-        scheduler_d.step()
