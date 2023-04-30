@@ -47,7 +47,13 @@ if __name__ == '__main__':
         env=os.environ)
     subprocess.check_call(['python','prepare/preprocess_zzz.py'],
         env=os.environ)
-    subprocess.check_call(['python','svc_trainer.py',
-        '-c','configs/base.yaml',
-        '-p',default_checkpoint_path(os.path.join('chkpt',args.name)),
-        '-n',args.name], env=os.environ)
+    warmstart = default_checkpoint_path(os.path.join('chkpt',args.name))
+    if warmstart is not None:
+        subprocess.check_call(['python','svc_trainer.py',
+            '-c','configs/base.yaml',
+            '-p',warmstart,
+            '-n',args.name], env=os.environ)
+    else:
+        subprocess.check_call(['python','svc_trainer.py',
+            '-c','configs/base.yaml',
+            '-n',args.name], env=os.environ)
