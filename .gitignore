@@ -1,0 +1,9 @@
+*__pycache__*
+chkpt
+data_svc
+data_svc_raw
+files
+logs
+*.tar
+whisper_pretrain/medium.pt
+*.pth
