@@ -61,7 +61,7 @@ The right UI panel allows for recording audio directly into the GUI for quick fi
 	  smaller-dataset speakers, lower ratios may be desired. Generally, the
 	  more data there is for a speaker, the higher the cluster ratio can be
 	  set without frequent artifacting.
-* Noise scale - If sibilants sound buzzy/metallic, try raising the noise scale. If artifacts appear that sound like bad noise reduction/the speaker being dunked in water, reduce the noise scale.
+* Noise scale - adjusts the variability of variational inference. Usually low values (0.2) work.
 * Automatic f0 prediction - For 4.0, a pitch predictor is trained alongside the speaker model which can be used to impose predicted pitch on speech features.
 * Use old f0 detection for inference - Uses praat's `to_pitch_ac` instead of
   `to_pitch_cc`. MAY be preferred for speaking inputs with rapidly varying pitch.
