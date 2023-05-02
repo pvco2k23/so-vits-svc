@@ -807,7 +807,7 @@ class InferenceGui2 (QMainWindow):
             self.transpose_label, self.transpose_num)
         self.sovits_lay.addWidget(self.transpose_frame)
 
-        self.timestretch_validator = QDoubleValidator(0.5,1.0,1)
+        self.timestretch_validator = QDoubleValidator(0.5,1.0,3)
         self.cluster_ratio_validator = QDoubleValidator(0.0,1.0,1)
 
         self.cluster_switch = QCheckBox("Use clustering")
